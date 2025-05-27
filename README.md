@@ -1,2 +1,3 @@
 # PPI_shortest_path
-A
+A course project on PPI_shortest_path
+
