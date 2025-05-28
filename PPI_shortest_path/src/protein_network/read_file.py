@@ -36,8 +36,7 @@ graph = create_graph_from_file(filename)
 
 # 打印图的邻接表
 print("图的邻接表：")
-for node, neighbors in graph.adj.items():
-    print(f"{node}: {neighbors}")
+print(graph)
 
 
 '''
