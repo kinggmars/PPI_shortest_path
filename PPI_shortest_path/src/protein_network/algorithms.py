@@ -154,6 +154,9 @@ def dijkstra_export_all_paths(graph, filename):
 
 #Bellman-Ford
 
+# algorithms.py
+
+
 def bellman_ford(graph, start):
     """
     Bellman-Ford算法实现，输出格式为：起点 终点 总权重 路径
@@ -193,19 +196,9 @@ def bellman_ford(graph, start):
                     distances[v] = distances[u] + weight
                     predecessors[v] = u
     
-    # 检测负权重环路
-    for u in graph.adj:
-        for v, weight in graph.get_neighbors(u):
-            if distances[u] + weight < distances[v]:
-                raise ValueError("图中存在负权重环路")
-    
     # 生成路径输出
     results = []
-    for node in nodes:
-        if node == start:
-            results.append(f"{start} {node} 0 {start}")
-            continue
-        
+    for node in nodes:        
         path = []
         current = node
         # 回溯路径
@@ -239,14 +232,13 @@ def write_bf_results(results, filename):
     # 在调用Bellman-Ford后使用
     # results = bellman_ford(graph, 'A')
     # write_bf_results(results, "output.txt")
-    输出文件示例：
-    output.txt:
+    输出示例：
         node1 node2 total_weight path
         A A 0 A
         A B 1 A->B
         A C 3 A->B->C
         A D 4 A->B->C->D
-    函数的返回值都可以通过此函数来写入文件
+    理论上所有函数的返回值都可以通过此函数来写入文件
     
     """
     try:
@@ -258,5 +250,63 @@ def write_bf_results(results, filename):
     except IOError as e:
         print(f"文件写入失败: {str(e)}")
         return False
+    
+def get_shortest_path(graph, start_node, end_node):
+    """
+    根据Bellman-Ford算法获取从起始节点到目标节点的最短路径结果。
+
+    参数:
+        graph (Graph): 图实例。
+        start_node (str): 起始节点。
+        end_node (str): 目标节点。
+
+    返回:
+        list: 包含单个元素的列表，格式为'node1 node2 total_weight path'，若不可达则总权重为inf。
+    """
+    # 检查目标节点是否存在于图中
+    if end_node not in graph.adj:
+        return [f"{start_node} {end_node} inf"]
+    
+    # 调用Bellman-Ford算法获取所有结果
+    try:
+        results = bellman_ford(graph, start_node)
+    except KeyError as e:
+        raise e
+    
+    # 在结果中查找目标节点
+    for line in results:
+        parts = line.split()
+        if parts[1] == end_node:
+            return [line]
+    
+    # 理论上不会执行到此处
+    return [f"{start_node} {end_node} inf"]
+
+def get_result_by_end_node(result, end_node):
+    """
+    从Bellman-Ford算法的结果中提取指定目标节点的路径信息。
+
+    参数:
+        result (list): Bellman-Ford算法返回的结果列表。
+        end_node (str): 目标节点。
+
+    返回:
+        list: 包含单个元素的列表，格式为'node1 node2 total_weight path'，若不存在则总权重为inf。
+    """
+    if not result:
+        return []
+    
+    # 提取起始节点
+    first_line = result[0]
+    start_node = first_line.split()[0]
+    
+    # 遍历查找目标节点
+    for line in result:
+        parts = line.split()
+        if len(parts) >= 2 and parts[1] == end_node:
+            return [line]
+    
+    # 构造不可达结果
+    return [f"{start_node} {end_node} inf"]
 
 #Johnson
