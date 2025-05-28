@@ -60,6 +60,44 @@ def floyd_warshall(graph:Graph):
 
 
 #Bellman-Ford
+def bellman_ford(graph, start):
+    """
+    Bellman-Ford算法实现，计算从起点到所有其他节点的最短路径。
+    
+    参数：
+    graph (Graph): 图实例
+    start (str): 起点节点
+    
+    返回：
+    dict: 从起点到每个节点的最短路径长度
 
+    示例：
+    graph:
+    'A', 'B', 1
+    'A', 'C', 4
+    'B', 'C', 2
+    'B', 'D', 5
+    'C', 'D', 1
+    调用：bellman_ford(graph, 'A')
+    返回：{'A': 0, 'B': 1, 'C': 3, 'D': 4}
+    """
+    # 检查起始节点是否存在
+    if start not in graph.adj:
+        raise KeyError(f"起始节点 {start} 不存在于图中")
+    # 初始化距离字典
+    distances = {node: float('inf') for node in graph.adj}
+    distances[start] = 0
+    # 松弛操作
+    for _ in range(len(graph.adj) - 1):
+        for u in graph.adj:
+            for v, weight in graph.get_neighbors(u):
+                if distances[u] + weight < distances[v]:
+                    distances[v] = distances[u] + weight
+    # 检测负权重环路
+    for u in graph.adj:
+        for v, weight in graph.get_neighbors(u):
+            if distances[u] + weight < distances[v]:
+                raise ValueError("图中存在负权重环路")
+    return distances
 
 #Johnson
