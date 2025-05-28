@@ -188,13 +188,22 @@ def bellmanford_shortest_paths(graph, start):
     predecessors = {n: None for n in nodes}
     distances[start] = 0
     
+    # 获取所有边
+    edges = []
+    for u in graph.adj:
+        for v, weight in graph.adj[u].items():
+            edges.append((u, v, weight))
+    
     # 松弛操作
     for _ in range(len(nodes) - 1):
-        for u in nodes:
-            for v, weight in graph.get_neighbors(u):
-                if distances[u] + weight < distances[v]:
-                    distances[v] = distances[u] + weight
-                    predecessors[v] = u
+        updated = False
+        for u, v, w in edges:
+            if distances[u] + w < distances[v]:
+                distances[v] = distances[u] + w
+                predecessors[v] = u
+                updated = True
+        if not updated:  # 提前终止优化
+            break
     
     # 生成路径输出
     results = []
