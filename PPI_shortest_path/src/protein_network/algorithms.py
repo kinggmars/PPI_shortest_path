@@ -1,78 +1,68 @@
 # 四个算法
 from graph import Graph
-import numpy as np
 from collections import defaultdict
 
 
 #Floyd-Warshall
-def floyd_warshall(graph:Graph):
-    n = len(graph.adj)
-    # 深拷贝原始图，避免修改输入数据,以及利用graph中储存的邻接表生成方便该算法编写的邻接矩阵
-    path_matrix=[[None]*n for i in range(n)]#每个点对之间生成一个路径矩阵
-    dist=np.zeros((n,n),dtype=float)#初始化距离矩阵，距离全部设置为零，并在下一步更新距离，
-
-    #邻接矩阵的初始化
-    node_to_id={}#初始化两个节点编号的字典，方便形成邻接矩阵
-    id_to_node={}
-    i=0
-    for node in graph.adj.keys():
-        node_to_id[node]=i
-        id_to_node[i]=node
-        i+=1
-    for node in graph.adj.keys():
-        its_index=node_to_id[node]
-        for index in range(n):
-            if index==its_index:
-                pass
-            else:
-                next_node=id_to_node[index]
-                if next_node in graph.adj[node].keys():
-                    weight=graph.adj[node][next_node]
-                    dist[its_index][index]=weight
-                    path_matrix[its_index][index]=[node,next_node]
-                else:
-                    dist[its_index][index]=float('inf')
-    #完成邻接矩阵初始化，自身对自身距离为0，未连接
-
-    # 三重循环更新所有节点对的最短路径
+def floyd_warshall(graph):
+    # 创建节点映射，方便在矩阵运算后进行查找蛋白质名称
+    nodes = list(graph.adj.keys())
+    n = len(nodes)
+    node_to_id = {node: i for i, node in enumerate(nodes)}
+    id_to_node = {i: node for i, node in enumerate(nodes)}
+    
+    # 初始化距离矩阵和路径矩阵
+    dist = [[float('inf')] * n for _ in range(n)]
+    path_matrix = [[None] * n for _ in range(n)]
+    
+    # 设置对角线：自身到自身
+    for i in range(n):
+        dist[i][i] = 0
+        path_matrix[i][i] = [nodes[i]]  # 存储路径
+    
+    # 直接相邻的边也需要更改距离与路径
+    for u in graph.adj:
+        u_id = node_to_id[u]
+        for v, weight in graph.adj[u].items():
+            v_id = node_to_id[v]
+            dist[u_id][v_id] = weight
+            path_matrix[u_id][v_id] = [u, v]  
+    
+    # 算法核心运算部分：三重循环更新最短路径
     for k in range(n):
         for i in range(n):
+            if dist[i][k] == float('inf'):
+                continue
             for j in range(n):
-                if dist[i][k] != float('inf') and dist[k][j] != float('inf'):
-                    #如果路径更短则更新
-                    if dist[i][j]<=dist[i][k]+dist[k][j]:
-                        pass
-                    else:
-                        path_copy=path_matrix[i][k].copy()
-                        path_copy.pop()
-                        path_matrix[i][j]=path_copy+path_matrix[k][j]
-                    dist[i][j] = min(dist[i][j], dist[i][k] + dist[k][j])
+                if dist[k][j] == float('inf'):
+                    continue
+                new_dist = dist[i][k] + dist[k][j]
+                if new_dist < dist[i][j]:
+                    dist[i][j] = new_dist
+                    # 正确合并路径：i->k + k->j (注意需要去掉重复的k节点)
+                    path_matrix[i][j] = path_matrix[i][k] + path_matrix[k][j][1:]
+    
+    return dist, path_matrix, id_to_node
 
-    return dist,path_matrix
-
-def floyd_warshall_export(graph,filename):
-    """
-    导出所有节点对的最短路径到文件，格式为：
-    node1 node2 total_weight path
-    例如：A B 5 A->B->C
-    """
-    dist_matrix,path_matrix,id_to_node_dict=floyd_warshall(graph)
-    n=len(graph)
-    with open(filename,'w') as file:
-        file.write("node1 node2 total_weight path\n")
-        for row in range(n):
-            for column in range(n):
-                distance=dist_matrix[row][column]
-                if distance==float('inf'):#未联通则跳过
-                    pass
-                else:
-                    start_node=id_to_node_dict[row]
-                    end_node=id_to_node_dict[column]
-                    file.write(f'{start_node} {end_node} {distance} ')
-                    index_path_list=path_matrix[row][column]#以索引表示的路径
-                    path_list=[id_to_node_dict[index] for index in index_path_list]
-                    path='->'.join(path_list)
-                    file.write(f'{path}\n')
+def floyd_warshall_export(graph, filename):
+    dist, path_matrix, id_to_node = floyd_warshall(graph)
+    n = len(dist)
+    
+    with open(filename, 'w') as f:
+        f.write("node1 node2 total_weight path\n")
+        for i in range(n):
+            for j in range(n):
+                if dist[i][j] == float('inf'):
+                    continue  # 跳过不可达的节点对
+                if i==j:
+                    continue #自身无需再打印了
+                
+                start = id_to_node[i]
+                end = id_to_node[j]
+                weight = dist[i][j]
+                path = "->".join(path_matrix[i][j])  # 路径已存储为节点名称
+                
+                f.write(f"{start} {end} {weight} {path}\n")
 
 
 
