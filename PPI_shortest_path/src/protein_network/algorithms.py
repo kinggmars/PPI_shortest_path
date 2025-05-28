@@ -274,7 +274,7 @@ def bellmanford_shortest_path(graph, start_node, end_node):
     """
     # 检查目标节点是否存在于图中
     if end_node not in graph.adj:
-        return [f"{start_node} {end_node} inf"]
+        return f"{start_node} {end_node} inf"
     
     # 调用Bellman-Ford算法获取所有结果
     try:
@@ -286,9 +286,9 @@ def bellmanford_shortest_path(graph, start_node, end_node):
     for line in results:
         parts = line.split()
         if parts[1] == end_node:
-            return [line]
+            return line
     
     # 理论上不会执行到此处
-    return [f"{start_node} {end_node} inf"]
+    return f"{start_node} {end_node} inf"
 
 #Johnson
