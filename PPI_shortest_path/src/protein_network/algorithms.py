@@ -269,7 +269,7 @@ def bellmanford_shortest_path(graph, start_node, end_node):
     
     # 调用Bellman-Ford算法获取所有结果
     try:
-        results = bellman_ford(graph, start_node)
+        results = bellmanford_shortest_paths(graph, start_node)
     except KeyError as e:
         raise e
     
