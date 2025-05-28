@@ -48,7 +48,29 @@ def floyd_warshall(graph:Graph):
 
     return dist,path_matrix
 
-
+def floyd_warshall_export(graph,filename):
+    """
+    导出所有节点对的最短路径到文件，格式为：
+    node1 node2 total_weight path
+    例如：A B 5 A->B->C
+    """
+    dist_matrix,path_matrix,id_to_node_dict=floyd_warshall(graph)
+    n=len(graph)
+    with open(filename,'w') as file:
+        file.write("node1 node2 total_weight path\n")
+        for row in range(n):
+            for column in range(n):
+                distance=dist_matrix[row][column]
+                if distance==float('inf'):#未联通则跳过
+                    pass
+                else:
+                    start_node=id_to_node_dict[row]
+                    end_node=id_to_node_dict[column]
+                    file.write(f'{start_node} {end_node} {distance} ')
+                    index_path_list=path_matrix[row][column]#以索引表示的路径
+                    path_list=[id_to_node_dict[index] for index in index_path_list]
+                    path='->'.join(path_list)
+                    file.write(f'{path}\n')
 
 
 
