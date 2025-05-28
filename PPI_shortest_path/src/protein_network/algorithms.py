@@ -313,4 +313,142 @@ def bellmanford_shortest_path(graph, start_node, end_node):
     # 理论上不会执行到此处
     return f"{start_node} {end_node} inf"
 
+
+
+
+
 #Johnson
+def johnson_shortest_paths(graph, start_node):
+    """
+    使用Johnson算法计算从起点到所有节点的最短路径。
+    返回格式与其他算法一致：列表，每个元素为格式化的路径字符串 "起点 终点 总权重 路径"
+    
+    参数:
+        graph (Graph): 图实例
+        start_node (str): 起始节点
+        
+    返回:
+        list: 包含所有路径的字符串列表
+    """
+    # 步骤1: 添加虚拟节点并运行Bellman-Ford
+    virtual_node = "__JOHNSON_VIRTUAL__"
+    temp_graph = Graph(initial_graph=graph.adj)
+    
+    # 确保虚拟节点名称唯一
+    while virtual_node in temp_graph.adj:
+        virtual_node += "_"
+    
+    # 添加虚拟节点到所有其他节点的边（权重为0）
+    for node in graph.adj:
+        temp_graph.add_edge(virtual_node, node, 0)
+    
+    # 运行Bellman-Ford获取势能函数h
+    try:
+        h_results = bellmanford_shortest_paths(temp_graph, virtual_node)
+    except (KeyError, ValueError) as e:
+        raise RuntimeError(f"Johnson算法初始化失败: {str(e)}")
+    
+    # 解析结果，得到h值（重新赋权函数）
+    h = {}
+    for line in h_results:
+        parts = line.split()
+        node = parts[1]
+        if parts[2] == 'inf':
+            raise RuntimeError(f"节点 {node} 从虚拟节点不可达")
+        h[node] = float(parts[2])
+    
+    # 步骤2: 创建重新赋权后的图
+    reweighted_graph = Graph()
+    for u in graph.adj:
+        for v, weight in graph.adj[u].items():
+            new_weight = weight + h[u] - h[v]
+            reweighted_graph.add_edge(u, v, new_weight)
+    
+    # 步骤3: 在重新赋权图上运行Dijkstra
+    distances, predecessors = dijkstra_shortest_paths(reweighted_graph, start_node)
+    
+    # 生成路径输出
+    results = []
+    for node in graph.adj:
+        if distances[node] == float('inf'):
+            results.append(f"{start_node} {node} inf")
+            continue
+            
+        # 重建路径
+        path = []
+        current = node
+        while current is not None:
+            path.append(current)
+            current = predecessors[current]
+        path.reverse()
+        
+        # 还原原始距离: d(u, v) = d'(u, v) - h(u) + h(v)
+        original_dist = distances[node] - h[start_node] + h[node]
+        path_str = "->".join(path)
+        results.append(f"{start_node} {node} {original_dist} {path_str}")
+    
+    return results
+
+def johnson_shortest_path(graph, start_node, end_node):
+    """
+    使用Johnson算法计算从起点到终点的最短路径
+    
+    参数:
+        graph (Graph): 图实例
+        start_node (str): 起始节点
+        end_node (str): 目标节点
+        
+    返回:
+        str: 格式化的路径字符串 "起点 终点 总权重 路径"
+    """
+    # 检查节点是否存在
+    if start_node not in graph.adj or end_node not in graph.adj:
+        return f"{start_node} {end_node} inf"
+    
+    # 使用johnson_shortest_paths函数计算结果
+    try:
+        results = johnson_shortest_paths(graph, start_node)
+    except RuntimeError as e:
+        raise e
+    
+    # 在结果中查找目标节点
+    for line in results:
+        parts = line.split()
+        if parts[1] == end_node:
+            return line
+    
+    return f"{start_node} {end_node} inf"
+
+def johnson_export_all_paths(graph, filename):
+    """
+    使用Johnson算法导出所有节点对的最短路径到文件
+    
+    参数:
+        graph (Graph): 图实例
+        filename (str): 输出文件名
+    
+    返回:
+        bool: 操作是否成功
+    """
+    try:
+        with open(filename, 'w') as f:
+            f.write("node1 node2 total_weight path\n")
+            for start_node in graph.adj:
+                try:
+                    # 计算以 start_node 为起点的最短路径
+                    paths = johnson_shortest_paths(graph, start_node)
+                except RuntimeError as e:
+                    f.write(f"# Error for source {start_node}: {str(e)}\n")
+                    continue
+                
+                # 写入结果
+                for path_str in paths:
+                    # 跳过自身路径（可选）
+                    parts = path_str.split()
+                    if parts[0] == parts[1]:
+                        continue
+                    f.write(f"{path_str}\n")
+        return True
+    except IOError as e:
+        print(f"文件写入失败: {str(e)}")
+        return False
