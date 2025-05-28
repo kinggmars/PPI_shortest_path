@@ -157,7 +157,7 @@ def dijkstra_export_all_paths(graph, filename):
 # algorithms.py
 
 
-def bellman_ford_shortest_paths(graph, start):
+def bellmanford_shortest_paths(graph, start):
     """
     Bellman-Ford算法实现，输出格式为：起点 终点 总权重 路径
     
@@ -190,7 +190,7 @@ def bellman_ford_shortest_paths(graph, start):
     
     # 松弛操作
     for _ in range(len(nodes) - 1):
-        for u in graph.adj:
+        for u in nodes:
             for v, weight in graph.get_neighbors(u):
                 if distances[u] + weight < distances[v]:
                     distances[v] = distances[u] + weight
@@ -281,4 +281,5 @@ def bellmanford_shortest_path(graph, start_node, end_node):
     
     # 理论上不会执行到此处
     return [f"{start_node} {end_node} inf"]
+
 #Johnson
