@@ -57,7 +57,98 @@ def floyd_warshall(graph:Graph):
 
 
 #Dijkstra
+import heapq
+# 算法的复杂度为O((m+n)logn)
+def dijkstra_shortest_paths(graph, start_node):
+    """
+    使用 Dijkstra 算法计算从起点到所有节点的最短路径。
+    返回两个字典：最短距离和前驱节点。
+    """
+    if start_node not in graph.adj:
+        raise ValueError(f"Start node '{start_node}' not found in the graph.")
+    
+    # 初始化距离和前驱字典
+    distances = {node: float('inf') for node in graph.adj}
+    predecessors = {node: None for node in graph.adj}
+    distances[start_node] = 0
+    
+    # 使用优先队列（最小堆）
+    heap = [(0, start_node)]
+    
+    while heap:
+        current_distance, u = heapq.heappop(heap)
+        
+        # 如果当前距离大于已知最短距离，跳过
+        if current_distance > distances[u]:
+            continue
+        
+        # 遍历邻接节点
+        for v, weight in graph.get_neighbors(u):
+            distance_through_u = current_distance + weight
+            # 如果找到更短的路径，更新
+            if distance_through_u < distances[v]:
+                distances[v] = distance_through_u
+                predecessors[v] = u
+                heapq.heappush(heap, (distance_through_u, v))
+    
+    return distances, predecessors
 
+def dijkstra_shortest_path(graph, start_node, end_node):
+    """
+    返回从起点到终点的最短路径及其总权重。
+    如果路径不存在，返回 (None, inf)。
+    """
+    if start_node not in graph.adj or end_node not in graph.adj:
+        raise ValueError("Start or end node not in graph.")
+    
+    distances, predecessors = dijkstra_shortest_paths(graph, start_node)
+    if distances[end_node] == float('inf'):
+        return None, float('inf')
+    
+    # 反向构建路径
+    path = []
+    current = end_node
+    while current is not None:
+        path.append(current)
+        current = predecessors[current]
+    path.reverse()
+    
+    return path, distances[end_node]
+
+def dijkstra_export_all_paths(graph, filename):
+    """
+    导出所有节点对的最短路径到文件，格式为：
+    node1 node2 total_weight path
+    例如：A B 5 A->B->C
+    """
+    with open(filename, 'w') as f:
+        nodes = list(graph.adj.keys())  # 获取所有节点
+        f.write("node1 node2 total_weight path\n")
+        for u in nodes:
+            try:
+                # 计算以 u 为起点的最短路径
+                distances, predecessors = dijkstra_shortest_paths(graph, u)
+            except ValueError:
+                continue  
+            
+            for v in nodes:
+                if u == v:
+                    continue  # 跳过自身
+                if distances[v] == float('inf'):
+                    continue  # 不可达的路径不写入
+                
+                # 重建路径
+                path = []
+                current = v
+                while current is not None:
+                    path.append(current)
+                    current = predecessors[current]
+                path.reverse()  # 反转得到正确顺序
+                
+                # 将路径转换为字符串（如 A->B->C）
+                path_str = "->".join(path)
+                # 写入文件：u v weight path
+                f.write(f"{u} {v} {distances[v]} {path_str}\n")
 
 #Bellman-Ford
 def bellman_ford(graph, start):
