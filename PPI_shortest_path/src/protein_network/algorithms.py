@@ -85,8 +85,15 @@ import heapq
 # 算法的复杂度为O((m+n)logn)
 def dijkstra_shortest_paths(graph, start_node):
     """
-    使用 Dijkstra 算法计算从起点到所有节点的最短路径。
-    返回两个字典：最短距离和前驱节点。
+    使用Dijkstra算法计算从起点到所有节点的最短路径。
+    返回格式：列表，每个元素为格式化的路径字符串 "起点 终点 总权重 路径"
+    
+    参数:
+        graph (Graph): 图实例
+        start_node (str): 起始节点
+        
+    返回:
+        list: 包含所有路径的字符串列表
     """
     if start_node not in graph.adj:
         raise ValueError(f"Start node '{start_node}' not found in the graph.")
@@ -115,64 +122,88 @@ def dijkstra_shortest_paths(graph, start_node):
                 predecessors[v] = u
                 heapq.heappush(heap, (distance_through_u, v))
     
-    return distances, predecessors
+    # 生成路径输出
+    results = []
+    for node in graph.adj:
+        if distances[node] == float('inf'):
+            results.append(f"{start_node} {node} inf")
+            continue
+            
+        # 重建路径
+        path = []
+        current = node
+        while current is not None:
+            path.append(current)
+            current = predecessors[current]
+        path.reverse()
+        
+        path_str = "->".join(path)
+        results.append(f"{start_node} {node} {distances[node]} {path_str}")
+    
+    return results
 
 def dijkstra_shortest_path(graph, start_node, end_node):
     """
-    返回从起点到终点的最短路径及其总权重。
-    如果路径不存在，返回 (None, inf)。
+    使用Dijkstra算法计算从起点到终点的最短路径
+    
+    参数:
+        graph (Graph): 图实例
+        start_node (str): 起始节点
+        end_node (str): 目标节点
+        
+    返回:
+        str: 格式化的路径字符串 "起点 终点 总权重 路径"
     """
+    # 检查节点是否存在
     if start_node not in graph.adj or end_node not in graph.adj:
-        raise ValueError("Start or end node not in graph.")
+        return f"{start_node} {end_node} inf"
     
-    distances, predecessors = dijkstra_shortest_paths(graph, start_node)
-    if distances[end_node] == float('inf'):
-        return None, float('inf')
+    # 使用dijkstra_shortest_paths函数计算结果
+    try:
+        results = dijkstra_shortest_paths(graph, start_node)
+    except ValueError:
+        return f"{start_node} {end_node} inf"
     
-    # 反向构建路径
-    path = []
-    current = end_node
-    while current is not None:
-        path.append(current)
-        current = predecessors[current]
-    path.reverse()
+    # 在结果中查找目标节点
+    for line in results:
+        parts = line.split()
+        if parts[1] == end_node:
+            return line
     
-    return path, distances[end_node]
+    return f"{start_node} {end_node} inf"
 
 def dijkstra_export_all_paths(graph, filename):
     """
-    导出所有节点对的最短路径到文件，格式为：
-    node1 node2 total_weight path
-    例如：A B 5 A->B->C
+    导出所有节点对的最短路径到文件
+    
+    参数:
+        graph (Graph): 图实例
+        filename (str): 输出文件名
+    
+    返回:
+        bool: 操作是否成功
     """
-    with open(filename, 'w') as f:
-        nodes = list(graph.adj.keys())  # 获取所有节点
-        f.write("node1 node2 total_weight path\n")
-        for u in nodes:
-            try:
-                # 计算以 u 为起点的最短路径
-                distances, predecessors = dijkstra_shortest_paths(graph, u)
-            except ValueError:
-                continue  
-            
-            for v in nodes:
-                if u == v:
-                    continue  # 跳过自身
-                if distances[v] == float('inf'):
-                    continue  # 不可达的路径不写入
+    try:
+        with open(filename, 'w') as f:
+            f.write("node1 node2 total_weight path\n")
+            for start_node in graph.adj:
+                try:
+                    # 计算以 start_node 为起点的最短路径
+                    paths = dijkstra_shortest_paths(graph, start_node)
+                except ValueError:
+                    continue
                 
-                # 重建路径
-                path = []
-                current = v
-                while current is not None:
-                    path.append(current)
-                    current = predecessors[current]
-                path.reverse()  # 反转得到正确顺序
-                
-                # 将路径转换为字符串（如 A->B->C）
-                path_str = "->".join(path)
-                # 写入文件：u v weight path
-                f.write(f"{u} {v} {distances[v]} {path_str}\n")
+                # 写入结果
+                for path_str in paths:
+                    # 跳过自身路径（可选）
+                    parts = path_str.split()
+                    if parts[0] == parts[1]:
+                        continue
+                    f.write(f"{path_str}\n")
+        return True
+    except IOError as e:
+        print(f"文件写入失败: {str(e)}")
+        return False
 
 
 
