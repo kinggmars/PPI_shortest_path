@@ -157,7 +157,7 @@ def dijkstra_export_all_paths(graph, filename):
 # algorithms.py
 
 
-def bellman_ford(graph, start):
+def bellman_ford_shortest_paths(graph, start):
     """
     Bellman-Ford算法实现，输出格式为：起点 终点 总权重 路径
     
@@ -217,7 +217,7 @@ def bellman_ford(graph, start):
     
     return results
 
-def write_bf_results(results, filename):
+def bellmanford_export_all_paths(results, filename):
     """
     将Bellman-Ford算法的结果写入文件
     
@@ -251,7 +251,7 @@ def write_bf_results(results, filename):
         print(f"文件写入失败: {str(e)}")
         return False
     
-def get_shortest_path(graph, start_node, end_node):
+def bellmanford_shortest_path(graph, start_node, end_node):
     """
     根据Bellman-Ford算法获取从起始节点到目标节点的最短路径结果。
 
@@ -281,32 +281,4 @@ def get_shortest_path(graph, start_node, end_node):
     
     # 理论上不会执行到此处
     return [f"{start_node} {end_node} inf"]
-
-def get_result_by_end_node(result, end_node):
-    """
-    从Bellman-Ford算法的结果中提取指定目标节点的路径信息。
-
-    参数:
-        result (list): Bellman-Ford算法返回的结果列表。
-        end_node (str): 目标节点。
-
-    返回:
-        list: 包含单个元素的列表，格式为'node1 node2 total_weight path'，若不存在则总权重为inf。
-    """
-    if not result:
-        return []
-    
-    # 提取起始节点
-    first_line = result[0]
-    start_node = first_line.split()[0]
-    
-    # 遍历查找目标节点
-    for line in result:
-        parts = line.split()
-        if len(parts) >= 2 and parts[1] == end_node:
-            return [line]
-    
-    # 构造不可达结果
-    return [f"{start_node} {end_node} inf"]
-
 #Johnson
