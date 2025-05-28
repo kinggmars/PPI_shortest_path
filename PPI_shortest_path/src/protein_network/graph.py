@@ -52,6 +52,13 @@ class Graph:
             f"{node}: {neighbors}"
             for node, neighbors in self.adj.items()
         )
+    def output_graph(self, filename):
+        """将图输出为文件"""
+        with open(filename, 'w') as f:
+            f.write("protein1 protein2 combined_score\n")
+            for node, neighbors in self.adj.items():
+                for neighbor, weight in neighbors.items():
+                    f.write(f"{node} {neighbor} {1000-weight}\n")        
 # tests/test_graph.py
 # # 测试图类能不能实现正常功能
 # import sys
