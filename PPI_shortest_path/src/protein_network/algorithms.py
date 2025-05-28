@@ -153,44 +153,110 @@ def dijkstra_export_all_paths(graph, filename):
 
 
 #Bellman-Ford
+
 def bellman_ford(graph, start):
     """
-    Bellman-Ford算法实现，计算从起点到所有其他节点的最短路径。
+    Bellman-Ford算法实现，输出格式为：起点 终点 总权重 路径
     
     参数：
     graph (Graph): 图实例
     start (str): 起点节点
     
     返回：
-    dict: 从起点到每个节点的最短路径长度
+    list: 每个元素为格式化的路径字符串
 
     示例：
     graph:
-    'A', 'B', 1
-    'A', 'C', 4
-    'B', 'C', 2
-    'B', 'D', 5
-    'C', 'D', 1
-    调用：bellman_ford(graph, 'A')
-    返回：{'A': 0, 'B': 1, 'C': 3, 'D': 4}
+        'A', 'B', 1
+        'A', 'C', 4
+        'B', 'C', 2
+        'B', 'D', 5
+        'C', 'D', 1
+    返回：
+        ['A A 0 A', 'A B 1 A->B', 'A C 3 A->B->C', 'A D 4 A->B->C->D']
     """
     # 检查起始节点是否存在
     if start not in graph.adj:
-        raise KeyError(f"起始节点 {start} 不存在于图中")
-    # 初始化距离字典
-    distances = {node: float('inf') for node in graph.adj}
+        raise KeyError(f"起始节点 '{start}' 不存在于图中")
+    
+    # 初始化数据
+    nodes = graph.adj.keys()
+    distances = {n: float('inf') for n in nodes}
+    predecessors = {n: None for n in nodes}
     distances[start] = 0
+    
     # 松弛操作
-    for _ in range(len(graph.adj) - 1):
+    for _ in range(len(nodes) - 1):
         for u in graph.adj:
             for v, weight in graph.get_neighbors(u):
                 if distances[u] + weight < distances[v]:
                     distances[v] = distances[u] + weight
+                    predecessors[v] = u
+    
     # 检测负权重环路
     for u in graph.adj:
         for v, weight in graph.get_neighbors(u):
             if distances[u] + weight < distances[v]:
                 raise ValueError("图中存在负权重环路")
-    return distances
+    
+    # 生成路径输出
+    results = []
+    for node in nodes:
+        if node == start:
+            results.append(f"{start} {node} 0 {start}")
+            continue
+        
+        path = []
+        current = node
+        # 回溯路径
+        while current is not None:
+            path.append(current)
+            current = predecessors[current]
+        path.reverse()
+        
+        if not path or path[0] != start:
+            # 不可达的情况
+            results.append(f"{start} {node} inf")
+        else:
+            total_weight = distances[node]
+            path_str = "->".join(path)
+            results.append(f"{start} {node} {total_weight} {path_str}")
+    
+    return results
+
+def write_bf_results(results, filename):
+    """
+    将Bellman-Ford算法的结果写入文件
+    
+    参数：
+    results (list): Bellman-Ford算法返回的路径结果列表
+    filename (str): 输出文件名
+    
+    返回：
+    bool: 写入成功返回True，失败返回False
+
+    调用示例：
+    # 在调用Bellman-Ford后使用
+    # results = bellman_ford(graph, 'A')
+    # write_bf_results(results, "output.txt")
+    输出文件示例：
+    output.txt:
+        node1 node2 total_weight path
+        A A 0 A
+        A B 1 A->B
+        A C 3 A->B->C
+        A D 4 A->B->C->D
+    函数的返回值都可以通过此函数来写入文件
+    
+    """
+    try:
+        with open(filename, 'w', encoding='utf-8') as f:
+            f.write("node1 node2 total_weight path\n")
+            for line in results:
+                f.write(f"{line}\n")
+        return True
+    except IOError as e:
+        print(f"文件写入失败: {str(e)}")
+        return False
 
 #Johnson
