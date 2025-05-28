@@ -25,8 +25,8 @@ def create_graph_from_file(filename):
             except ValueError:
                 continue  # 如果转换失败，跳过该行
             # 添加无向边，两个方向都设置相同的权重
-            graph.adj[protein1][protein2] = weight
-            graph.adj[protein2][protein1] = weight
+            graph.add_edge(protein1, protein2, weight)
+            graph.add_edge(protein2, protein1, weight)
     return graph
 
 
