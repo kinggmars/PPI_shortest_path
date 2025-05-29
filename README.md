@@ -104,9 +104,9 @@ def johnson():
 - 比Floyd-Warshall更适合大规模稀疏图
 ## 性能比较
 通过实验分析不同算法在不同图结构下的表现：
-```
+
 ![time_performance.png]
-```
+
 - 稠密图：Floyd-Warshall 表现稳定
 - 稀疏图：Johnson 算法效率优势明显
 - 单源查询：Dijkstra 时间复杂度最优
