@@ -114,7 +114,7 @@ def johnson():
 ### 测试用例
 测试所用的数据下载自string数据库
 ```
-<使用的数据的链接>
+4909.protein.links.v12.0.txt
 ```
 ### 项目包含完整的测试套件：
 - test_generate_read.py：验证图生成和文件I/O功能
