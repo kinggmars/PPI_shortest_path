@@ -162,7 +162,7 @@ g.johnson_export_all_paths( "johnson_results.txt")
 ## 3.文件操作
 ### 1.操作实例
 ```python
-#从文件生成图
+# 从文件生成图
 graph = create_graph_from_file("protein_data.txt")
 # 四种算法导出所有节点对的最短路径
 graph.johnson_export_all_paths( "johnson_results.txt")
@@ -172,6 +172,7 @@ graph.floyd_warshall_export( "floyd_results.txt")
 ```
 
 ### 2.输入文件格式
+输入文件可从`string`数据库下载格式为：
 ```
 protein1 protein2 combined_score
 P12345 Q98765 850
