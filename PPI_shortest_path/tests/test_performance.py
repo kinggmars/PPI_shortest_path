@@ -54,7 +54,6 @@ for n in node_counts:
     start = time.perf_counter()
     m.bellmanford_export_all_paths('bellman_ford.txt')
     dense_bellman_ford.append(time.perf_counter() - start)
-    print(n)
     # johnson
     start = time.perf_counter()
     m.johnson_export_all_paths('johnson.txt')
