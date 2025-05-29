@@ -120,20 +120,23 @@ def johnson():
 - test_generate_read.py：验证图生成和文件I/O功能
 - test_graph.py：测试图操作的核心逻辑
 - test_performance.py：算法性能对比实验
-- test_real_data: 用真实世界数据测试，输出两个点之间的最短路径
+- test_real_data: 用真实世界数据测试
 #### 运行测试：
 ```bash
 python test_generate_read.py  #  验证图的基本操作：
 python test_graph.py  # 验证文件读写一致性
 python test_performance.py  # 生成性能对比图
+python test_real_data.py # 输出两个点之间的最短路径，需要在文件里指定好实际数据的路径
 ```
 ## 项目背景
 本工具是《生物编程语言》课程的核心实践项目，旨在通过实际生物信息学场景（蛋白质相互作用网络）深入理解图论算法的工程实现。
 
-### 包安装方法
+## 包安装方法
 下载压缩包后解压，进入到PPI_shortest_path文件夹中，运行命令
+
 `pip install .`
-即可调用函数。
+
+即可调用函数，调用方法详见用户手册。
 
 ## 参考文献
 - 陈益富, 卢潇, 丁豪杰. 对Dijkstra算法的优化策略研究[J]. 计算机技术与发展, 2006(09).
