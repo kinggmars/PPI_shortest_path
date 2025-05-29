@@ -105,7 +105,7 @@ def johnson():
 ## 性能比较
 通过实验分析不同算法在不同图结构下的表现：
 
-![time_performance.png]
+![alt text](time_performance.png)
 
 - 稠密图：Floyd-Warshall 表现稳定
 - 稀疏图：Johnson 算法效率优势明显
