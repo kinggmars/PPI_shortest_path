@@ -142,7 +142,7 @@ g.dijkstra_export_all_paths( "dijkstra_results.txt")
 ```
 
 ### 3.Bellman-Ford算法
-**特点**：单源最短路径，支持负权重
+**特点**：单源最短路径
 **时间复杂度**：O(mn)
 **使用实例**
 ```python
@@ -180,7 +180,7 @@ g.johnson_export_all_paths( "johnson_results.txt")
 | 小型网络(<100节点)   | Floyd-Warshall       |
 | 大型网络单源查询     | Dijkstra             |
 | 大型网络全源查询     | Johnson              |
-| 含负权重的网络       | Bellman-Ford或Johnson|
+| 含负权重的网络       | Johnson|
 
 
 ---
@@ -307,6 +307,6 @@ print(f"从 {start_node} 到 {end_node} 的最短路径: {short_path}")
 
 ### 负权重处理
 当图中存在负权重时：
-- 使用 Bellman-Ford 或 Johnson 算法
+- 使用  Johnson 算法
 - Dijkstra 算法不适用
 
