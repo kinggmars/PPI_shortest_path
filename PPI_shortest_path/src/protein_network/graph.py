@@ -1,6 +1,7 @@
 # 使用邻接表的数据结构存储图，并实现图的简单操作
 from collections import defaultdict
-
+import heapq
+import numpy as np
 class Graph:
     def __init__(self, initial_graph=None):
         # 初始化图，可选参数为初始图数据（字典嵌套字典格式）
@@ -52,48 +53,354 @@ class Graph:
             f"{node}: {neighbors}"
             for node, neighbors in self.adj.items()
         )
+    
     def output_graph(self, filename):
         """将图输出为文件"""
         with open(filename, 'w') as f:
             f.write("protein1 protein2 combined_score\n")
             for node, neighbors in self.adj.items():
                 for neighbor, weight in neighbors.items():
-                    f.write(f"{node} {neighbor} {1000-weight}\n")        
-# tests/test_graph.py
-# # 测试图类能不能实现正常功能
-# import sys
-# sys.path.append("..")
-# from src.protein_network.graph import Graph
-# if __name__ == '__main__':
-#     # 用你的原始数据初始化图
-#     initial_data = {
-#         '1': {'2': 2, '4': 1},
-#         '2': {'4': 3, '5': 11},
-#         '3': {'1': 4, '6': 5},
-#         '4': {'3': 2, '6': 8, '7': 4, '5': 2},
-#         '5': {'7': 6},
-#         '7': {'6': 1}
-#     }
+                    f.write(f"{node} {neighbor} {1000-weight}\n")
 
-#     g = Graph(initial_data)
+    def floyd_warshall(self):
+        n = len(self.adj)
+        # 深拷贝原始图，避免修改输入数据,以及利用graph中储存的邻接表生成方便该算法编写的邻接矩阵
+        path_matrix=[[None]*n for i in range(n)]#每个点对之间生成一个路径矩阵
+        dist=np.zeros((n,n),dtype=float)#初始化距离矩阵，距离全部设置为零，并在下一步更新距离，
 
-#     # 打印图的邻接表
-#     print("--- 初始图结构 ---")
-#     print(g)
+        #邻接矩阵的初始化
+        node_to_id={}#初始化两个节点编号的字典，方便形成邻接矩阵
+        id_to_node={}
+        i=0
+        for node in self.adj.keys():
+            node_to_id[node]=i
+            id_to_node[i]=node
+            i+=1
+        for node in self.adj.keys():
+            its_index=node_to_id[node]
+            for index in range(n):
+                if index==its_index:
+                    pass
+                else:
+                    next_node=id_to_node[index]
+                    if next_node in self.adj[node].keys():
+                        weight=self.adj[node][next_node]
+                        dist[its_index][index]=weight
+                        path_matrix[its_index][index]=[node,next_node]
+                    else:
+                        dist[its_index][index]=float('inf')
+        #完成邻接矩阵初始化，自身对自身距离为0，未连接
 
-#     # 操作示例
-#     print("\n--- 操作测试 ---")
-#     print("节点'1'的邻接节点:", list(g.get_neighbors('1')))  # [('2', 2), ('4', 1)]
-#     print("边'4'->'5'的权重:", g.get_edge_weight('4', '5'))  # 2
-#     print("是否存在边'7'->'6':", g.has_edge('7', '6'))      # True
+        # 三重循环更新所有节点对的最短路径
+        for k in range(n):
+            for i in range(n):
+                for j in range(n):
+                    if dist[i][k] != float('inf') and dist[k][j] != float('inf'):
+                        #如果路径更短则更新
+                        if dist[i][j]<=dist[i][k]+dist[k][j]:
+                            pass
+                        else:
+                            path_copy=path_matrix[i][k].copy()
+                            path_copy.pop()
+                            path_matrix[i][j]=path_copy+path_matrix[k][j]
+                        dist[i][j] = min(dist[i][j], dist[i][k] + dist[k][j])
 
-#     # 添加新边
-#     g.add_edge('6', '3', weight=7)
-#     print("\n添加边 6->3 后:")
-#     print(g.adj['6'])  # {'3': 7}
+        return dist,path_matrix
 
-#     # 删除节点'5'
-#     g.remove_node('5')
-#     print("\n删除节点'5'后:")
-#     print(g)
+    def floyd_warshall_export(self,filename):
+        dist_matrix,path_matrix,id_to_node_dict=self.floyd_warshall()
+        n=len(self)
+        with open(filename,'w') as file:
+            file.write("node1 node2 total_weight path\n")
+            for row in range(n):
+                for column in range(n):
+                    distance=dist_matrix[row][column]
+                    if distance==float('inf'):#未联通则跳过
+                        pass
+                    else:
+                        start_node=id_to_node_dict[row]
+                        end_node=id_to_node_dict[column]
+                        file.write(f'{start_node} {end_node} {distance} ')
+                        index_path_list=path_matrix[row][column]#以索引表示的路径
+                        path_list=[id_to_node_dict[index] for index in index_path_list]
+                        path='->'.join(path_list)
+                        file.write(f'{path}\n')
 
+    #Dijkstra
+    import heapq
+    # 算法的复杂度为O((m+n)logn)
+    def dijkstra_shortest_paths(self, start_node):
+        if start_node not in self.adj:
+            raise ValueError(f"Start node '{start_node}' not found in the graph.")
+
+        # 初始化距离和前驱字典
+        distances = {node: float('inf') for node in self.adj}
+        predecessors = {node: None for node in self.adj}
+        distances[start_node] = 0
+
+        # 使用优先队列（最小堆）
+        heap = [(0, start_node)]
+
+        while heap:
+            current_distance, u = heapq.heappop(heap)
+
+            # 如果当前距离大于已知最短距离，跳过
+            if current_distance > distances[u]:
+                continue
+            
+            # 遍历邻接节点
+            for v, weight in self.get_neighbors(u):
+                distance_through_u = current_distance + weight
+                # 如果找到更短的路径，更新
+                if distance_through_u < distances[v]:
+                    distances[v] = distance_through_u
+                    predecessors[v] = u
+                    heapq.heappush(heap, (distance_through_u, v))
+
+        # 生成路径输出
+        results = []
+        for node in self.adj:
+            if distances[node] == float('inf'):
+                results.append(f"{start_node} {node} inf")
+                continue
+
+            # 重建路径
+            path = []
+            current = node
+            while current is not None:
+                path.append(current)
+                current = predecessors[current]
+            path.reverse()
+
+            path_str = "->".join(path)
+            results.append(f"{start_node} {node} {distances[node]} {path_str}")
+
+        return results
+
+    def dijkstra_shortest_path(self, start_node, end_node):
+        # 检查节点是否存在
+        if start_node not in self.adj or end_node not in self.adj:
+            return f"{start_node} {end_node} inf"
+
+        # 使用dijkstra_shortest_paths函数计算结果
+        try:
+            results = self.dijkstra_shortest_paths(start_node)
+        except ValueError:
+            return f"{start_node} {end_node} inf"
+
+        # 在结果中查找目标节点
+        for line in results:
+            parts = line.split()
+            if parts[1] == end_node:
+                return line
+
+        return f"{start_node} {end_node} inf"
+
+    def dijkstra_export_all_paths(self, filename):
+        try:
+            with open(filename, 'w') as f:
+                f.write("node1 node2 total_weight path\n")
+                for start_node in self.adj:
+                    try:
+                        # 计算以 start_node 为起点的最短路径
+                        paths = self.dijkstra_shortest_paths(self, start_node)
+                    except ValueError:
+                        continue
+                    
+                    # 写入结果
+                    for path_str in paths:
+                        # 跳过自身路径（可选）
+                        parts = path_str.split()
+                        if parts[0] == parts[1]:
+                            continue
+                        f.write(f"{path_str}\n")
+            return True
+        except IOError as e:
+            print(f"文件写入失败: {str(e)}")
+            return False
+
+    #Bellman-Ford
+
+    def bellmanford_shortest_paths(self, start):
+        
+        # 检查起始节点是否存在
+        if start not in self.adj:
+            raise KeyError(f"起始节点 '{start}' 不存在于图中")
+
+        # 初始化数据
+        nodes = self.adj.keys()
+        distances = {n: float('inf') for n in nodes}
+        predecessors = {n: None for n in nodes}
+        distances[start] = 0
+
+        # 获取所有边
+        edges = []
+        for u in self.adj:
+            for v, weight in self.adj[u].items():
+                edges.append((u, v, weight))
+
+        # 松弛操作
+        for _ in range(len(nodes) - 1):
+            updated = False
+            for u, v, w in edges:
+                if distances[u] + w < distances[v]:
+                    distances[v] = distances[u] + w
+                    predecessors[v] = u
+                    updated = True
+            if not updated:  # 提前终止优化
+                break
+            
+        # 生成路径输出
+        results = []
+        for node in nodes:        
+            path = []
+            current = node
+            # 回溯路径
+            while current is not None:
+                path.append(current)
+                current = predecessors[current]
+            path.reverse()
+
+            if not path or path[0] != start:
+                # 不可达的情况
+                results.append(f"{start} {node} inf")
+            else:
+                total_weight = distances[node]
+                path_str = "->".join(path)
+                results.append(f"{start} {node} {total_weight} {path_str}")
+
+        return results
+
+    def bellmanford_export_all_paths(results, filename):
+        try:
+            with open(filename, 'w', encoding='utf-8') as f:
+                f.write("node1 node2 total_weight path\n")
+                for line in results:
+                    f.write(f"{line}\n")
+            return True
+        except IOError as e:
+            print(f"文件写入失败: {str(e)}")
+            return False
+
+    def bellmanford_shortest_path(self, start_node, end_node):
+        # 检查目标节点是否存在于图中
+        if end_node not in self.adj:
+            return f"{start_node} {end_node} inf"
+
+        # 调用Bellman-Ford算法获取所有结果
+        try:
+            results = self.bellmanford_shortest_paths(start_node)
+        except KeyError as e:
+            raise e
+
+        # 在结果中查找目标节点
+        for line in results:
+            parts = line.split()
+            if parts[1] == end_node:
+                return line
+
+        # 理论上不会执行到此处
+        return f"{start_node} {end_node} inf"
+    #Johnson
+    def johnson_shortest_paths(self, start_node):
+        # 步骤1: 添加虚拟节点并运行Bellman-Ford
+        virtual_node = "__JOHNSON_VIRTUAL__"
+        temp_graph = Graph(initial_graph=self.adj)
+
+        # 确保虚拟节点名称唯一
+        while virtual_node in temp_graph.adj:
+            virtual_node += "_"
+
+        # 添加虚拟节点到所有其他节点的边（权重为0）
+        for node in self.adj:
+            temp_graph.add_edge(virtual_node, node, 0)
+
+        # 运行Bellman-Ford获取势能函数h
+        try:
+            h_results = temp_graph.bellmanford_shortest_paths(virtual_node)
+        except (KeyError, ValueError) as e:
+            raise RuntimeError(f"Johnson算法初始化失败: {str(e)}")
+
+        # 解析结果，得到h值（重新赋权函数）
+        h = {}
+        for line in h_results:
+            parts = line.split()
+            node = parts[1]
+            if parts[2] == 'inf':
+                raise RuntimeError(f"节点 {node} 从虚拟节点不可达")
+            h[node] = float(parts[2])
+
+        # 步骤2: 创建重新赋权后的图
+        reweighted_graph = Graph()
+        for u in self.adj:
+            for v, weight in self.adj[u].items():
+                new_weight = weight + h[u] - h[v]
+                reweighted_graph.add_edge(u, v, new_weight)
+
+        # 步骤3: 在重新赋权图上运行Dijkstra
+        distances, predecessors = reweighted_graph.dijkstra_shortest_paths(start_node)
+
+        # 生成路径输出
+        results = []
+        for node in self.adj:
+            if distances[node] == float('inf'):
+                results.append(f"{start_node} {node} inf")
+                continue
+
+            # 重建路径
+            path = []
+            current = node
+            while current is not None:
+                path.append(current)
+                current = predecessors[current]
+            path.reverse()
+
+            # 还原原始距离: d(u, v) = d'(u, v) - h(u) + h(v)
+            original_dist = distances[node] - h[start_node] + h[node]
+            path_str = "->".join(path)
+            results.append(f"{start_node} {node} {original_dist} {path_str}")
+
+        return results
+
+    def johnson_shortest_path(self, start_node, end_node):
+        # 检查节点是否存在
+        if start_node not in self.adj or end_node not in self.adj:
+            return f"{start_node} {end_node} inf"
+
+        # 使用johnson_shortest_paths函数计算结果
+        try:
+            results = self.johnson_shortest_paths(start_node)
+        except RuntimeError as e:
+            raise e
+
+        # 在结果中查找目标节点
+        for line in results:
+            parts = line.split()
+            if parts[1] == end_node:
+                return line
+
+        return f"{start_node} {end_node} inf"
+
+    def johnson_export_all_paths(self, filename):
+        try:
+            with open(filename, 'w') as f:
+                f.write("node1 node2 total_weight path\n")
+                for start_node in self.adj:
+                    try:
+                        # 计算以 start_node 为起点的最短路径
+                        paths = self.johnson_shortest_paths(start_node)
+                    except RuntimeError as e:
+                        f.write(f"# Error for source {start_node}: {str(e)}\n")
+                        continue
+                    
+                    # 写入结果
+                    for path_str in paths:
+                        # 跳过自身路径（可选）
+                        parts = path_str.split()
+                        if parts[0] == parts[1]:
+                            continue
+                        f.write(f"{path_str}\n")
+            return True
+        except IOError as e:
+            print(f"文件写入失败: {str(e)}")
+            return False
