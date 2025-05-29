@@ -2,6 +2,7 @@
 
 - [ 蛋白质网络图分析工具用户手册](#-蛋白质网络图分析工具用户手册)
   - [目录](#目录)
+  - [0. 调用方法](#0-函数调用方法)
   - [1. 图数据结构（Graph类）](#1-图数据结构graph类)
     - [功能描述](#功能描述)
     - [核心方法](#核心方法)
@@ -27,7 +28,13 @@
     - [ 路径不存在](#-路径不存在)
     - [ 大型网络限制](#-大型网络限制)
     - [ 负权重处理](#-负权重处理)
+## 0. 函数调用方法
 
+pip安装好后在protein_network中调用模块：
+```python
+# 示例
+from protein_network.graph import graph
+```
 ## 1. 图数据结构（Graph类）
 
 
@@ -263,9 +270,8 @@ dense_graph = create_undirected_connected_graph(num_nodes=50, sparse=0.1)
 ---
 ## 5. 综合示例
 ```python
-from graph import Graph
-from graph_generate import create_undirected_connected_graph
-
+from protein_network.graph import Graph
+from protein_network.graph import create_undirected_connected_graph
 # 1. 使用随机网络生成器创建随机蛋白质网络
 protein_net = create_undirected_connected_graph(num_nodes=50, sparse=0.05)
 
