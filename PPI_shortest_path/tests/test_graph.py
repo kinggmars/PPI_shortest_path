@@ -1,10 +1,15 @@
-# tests/test_graph.py
 # 测试图类能不能实现正常功能
 import sys
-sys.path.append("..")
-from src.protein_network.graph import Graph
+import os
+
+# 手动添加包路径
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..//src')))
+
+# 现在可以正常导入
+from protein_network.graph import Graph
+
 if __name__ == '__main__':
-    # 用你的原始数据初始化图
+    # 用原始数据初始化图
     initial_data = {
         '1': {'2': 2, '4': 1},
         '2': {'4': 3, '5': 11},
@@ -35,3 +40,6 @@ if __name__ == '__main__':
     g.remove_node('5')
     print("\n删除节点'5'后:")
     print(g)
+
+    # 将结果输出
+    g.output_graph('test.txt')
